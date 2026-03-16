@@ -1,0 +1,24 @@
+{
+  "name": "openclaw_bot",
+  "version": "1.0.0",
+  "description": "Cleaned OpenClaw Project",
+  "type": "module",
+  "scripts": {
+    "start": "openclaw gateway"
+  },
+  "dependencies": {
+    "@lancedb/lancedb": "^0.26.2",
+    "@larksuiteoapi/node-sdk": "^1.59.0",
+    "apache-arrow": "^21.1.0",
+    "axios": "^1.13.6",
+    "cheerio": "^1.2.0",
+    "dotenv": "^17.3.1",
+    "iconv-lite": "^0.7.2",
+    "openclaw": "^2026.3.8",
+    "playwright": "^1.58.2",
+    "screenshot-desktop": "^1.15.3"
+  },
+  "devDependencies": {
+    "tsx": "^4.21.0"
+  }
+}
