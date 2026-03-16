@@ -4,39 +4,56 @@ async function scrapeWechat() {
     const url = process.argv[2];
     if (!url) return console.log("❌ 缺少链接");
 
-    // 开启“有头模式”的底层特征，但保持 headless: true 运行
+    // 1. 启动配置：抹除自动化受控特征
     const browser = await chromium.launch({ 
         headless: true,
-        args: ['--disable-blink-features=AutomationControlled'] 
+        args: [
+            '--disable-blink-features=AutomationControlled',
+            '--no-sandbox'
+        ]
     });
     
     try {
         const context = await browser.newContext({
             userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.16(0x18001023) NetType/WIFI Language/zh_CN',
+            viewport: { width: 375, height: 667 },
+            deviceScaleFactor: 2,
+            isMobile: true,
+            hasTouch: true
         });
 
         const page = await context.newPage();
         
-        // 【核心】注入 JS 抹除自动化受控标记
+        // 2. 注入核心混淆：让浏览器觉得自己不是爬虫
         await page.addInitScript(() => {
             Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+            window.chrome = { runtime: {} };
         });
 
-        await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+        console.log(`🚀 正在秘密潜入: ${url}`);
         
-        // 模拟真人停留 2 秒
-        await page.waitForTimeout(2000);
+        // 3. 随机等待，模拟真人犹豫（0.5s - 2s）
+        await page.waitForTimeout(Math.floor(Math.random() * 1500) + 500);
 
-        // 微信文章内容的容器选择器
-        const content = await page.innerText('#img-content') || await page.innerText('body');
+        await page.goto(url, { waitUntil: 'networkidle', timeout: 45000 });
+
+        // 4. 模拟真人下滑动作
+        await page.evaluate(async () => {
+            window.scrollBy(0, 400);
+            await new Promise(r => setTimeout(r, 500));
+            window.scrollBy(0, 800);
+        });
+
+        // 5. 抓取正文：优先抓取微信特有的文章容器
+        const content = await page.innerText('#img-content') || await page.innerText('.rich_media_content');
         
-        if (content.includes("验证") || content.includes("环境异常")) {
-            console.log("❌ 攻坚失败：微信依然认出了我是机器人。建议：黑总，请更换代理软件的节点（IP）再试。");
+        if (content && content.length > 50) {
+            console.log(content.slice(0, 8000)); // 吐出深度情报
         } else {
-            console.log(content.slice(0, 5000)); // 吐出正文
+            console.log("❌ 攻坚失败：微信依然返回了验证页面。原因：此 IP 已被标记。");
         }
     } catch (e) {
-        console.log(`❌ 异常: ${e.message}`);
+        console.log(`❌ 异常拦截: ${e.message}`);
     } finally {
         await browser.close();
     }
